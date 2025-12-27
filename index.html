@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Pathfinding Visualizer - Interactive Algorithm Comparison</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .background-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(240, 147, 251, 0.3) 0%, transparent 50%);
+            animation: gradient-shift 15s ease infinite;
+        }
+
+        @keyframes gradient-shift {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 3em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            font-weight: 300;
+            animation: fadeIn 1s ease-out 0.3s both;
+        }
+
+        .author-info {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            animation: fadeIn 1s ease-out 0.5s both;
+        }
+
+        .author-info p {
+            color: #333;
+            font-size: 0.95em;
+            margin: 5px 0;
+        }
+
+        .author-info strong {
+            color: #667eea;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .info-box {
+            padding: 20px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #fff9e6 0%, #ffe9b3 100%);
+            border-left: 5px solid #ffc107;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .info-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .algo-box {
+            background: linear-gradient(135deg, #e7f3ff 0%, #c3e0ff 100%);
+            border-left: 5px solid #0066cc;
+        }
+
+        .info-box h3 {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-box ol, .info-box ul {
+            padding-left: 20px;
+        }
+
+        .info-box li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+
+        .controls-section {
+            margin-bottom: 25px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 20px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        button {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .mode-btn {
+            background: linear-gradient(135deg, #e9ecef 0%, #d3d5d9 100%);
+            color: #495057;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .algo-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .algo-btn.qlearning {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        }
+
+        .algo-btn.dijkstra {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .algo-btn.bfs {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .algo-btn.dfs {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .clear-btn {
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            color: #212529;
+        }
+
+        .reset-btn {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            position: relative;
+        }
+
+        #gameCanvas {
+            border: 4px solid #667eea;
+            border-radius: 15px;
+            cursor: crosshair;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            background: white;
+            transition: transform 0.3s ease;
+        }
+
+        #gameCanvas:hover {
+            transform: scale(1.01);
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            flex-wrap: wrap;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 20px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            color: #333;
+            padding: 8px 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .legend-item:hover {
+            transform: translateY(-3px);
+        }
+
+        .legend-box {
+            width: 30px;
+            height: 30px;
+            border: 2px solid #333;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #e7f3ff 0%, #c3e0ff 100%);
+            border-radius: 15px;
+            font-size: 17px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            font-weight: 500;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .stats.success {
+            background: linear-gradient(135deg, #d4edda 0%, #a8d5a8 100%);
+            color: #155724;
+            animation: successPulse 0.6s ease-out;
+        }
+
+        @keyframes successPulse {
+            0% { transform: scale(0.9); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .stats.error {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5b7bb 100%);
+            color: #721c24;
+            animation: shake 0.5s ease-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .stats.training {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffe5a1 100%);
+            color: #856404;
+            animation: rotate 2s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e9ecef;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                gap: 8px;
+            }
+
+            button {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+
+            #gameCanvas {
+                max-width: 100%;
+                height: auto;
+            }
+        }
+
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-animation"></div>
+    
+    <div class="container">
+        <header>
+            <h1>🎯 AI Pathfinding Visualizer</h1>
+            <p class="subtitle">Interactive Comparison of 5 Pathfinding Algorithms</p>
+        </header>
+
+        <div class="author-info">
+            <p><strong>Research Project by:</strong> Nazrana Nahreen</p>
+            <p><strong>Department:</strong> Computer Science and Engineering</p>
+            <p><strong>Institution:</strong> International Islamic University Chittagong (IIUC)</p>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-box">
+                <h3>📋 How to Use</h3>
+                <ol>
+                    <li><strong>Set Start:</strong> Click "Set Start" button, then click any cell (turns <span style="color: #00ff00; font-weight: bold;">GREEN</span>)</li>
+                    <li><strong>Set End:</strong> Click "Set End" button, then click any cell (turns <span style="color: #ff0000; font-weight: bold;">RED</span>)</li>
+                    <li><strong>Draw Walls:</strong> Click "Draw Walls" button, then click and drag to create obstacles</li>
+                    <li><strong>Run Algorithm:</strong> Choose any algorithm to visualize pathfinding!</li>
+                    <li><strong>Compare:</strong> Try different algorithms and analyze the results!</li>
+                </ol>
+            </div>
+
+            <div class="info-box algo-box">
+                <h3>🤖 Algorithm Overview</h3>
+                <ul>
+                    <li><strong>A*:</strong> Optimal & efficient with heuristic guidance</li>
+                    <li><strong>Dijkstra:</strong> Guaranteed shortest path, uniform exploration</li>
+                    <li><strong>BFS:</strong> Layer-by-layer, optimal for unweighted graphs</li>
+                    <li><strong>DFS:</strong> Deep exploration, not optimal</li>
+                    <li><strong>Q-Learning:</strong> AI learns through 500 training episodes</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="controls-section">
+            <div class="controls">
+                <button class="mode-btn active" onclick="setMode('wall')">🧱 Draw Walls</button>
+                <button class="mode-btn" onclick="setMode('start')">🟩 Set Start</button>
+                <button class="mode-btn" onclick="setMode('end')">🟥 Set End</button>
+                <button class="mode-btn" onclick="setMode('erase')">🗑️ Erase</button>
+            </div>
+        </div>
+
+        <div class="controls-section">
+            <div class="controls">
+                <button class="algo-btn" onclick="runAlgorithm('astar')">🚀 A* Algorithm</button>
+                <button class="algo-btn dijkstra" onclick="runAlgorithm('dijkstra')">📊 Dijkstra</button>
+                <button class="algo-btn bfs" onclick="runAlgorithm('bfs')">🌊 BFS</button>
+                <button class="algo-btn dfs" onclick="runAlgorithm('dfs')">🌲 DFS</button>
+                <button class="algo-btn qlearning" onclick="runAlgorithm('qlearning')">🧠 Q-Learning</button>
+            </div>
+        </div>
+
+        <div class="controls-section">
+            <div class="controls">
+                <button class="clear-btn" onclick="clearPath()">↩️ Clear Path</button>
+                <button class="reset-btn" onclick="resetGrid()">🔄 Reset All</button>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="gameCanvas" width="600" height="600"></canvas>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box" style="background: #00ff00;"></div>
+                <span>Start Point</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #ff0000;"></div>
+                <span>End Point</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #000000;"></div>
+                <span>Wall/Obstacle</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #87ceeb;"></div>
+                <span>Visited Cells</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #ffff00;"></div>
+                <span>Final Path</span>
+            </div>
+        </div>
+
+        <div class="stats" id="stats">
+            👆 Click buttons above to start! Set start point, end point, then draw some walls!
+        </div>
+
+        <footer>
+            <p>🎓 Research Project - AI Pathfinding Visualizer</p>
+            <p>Developed by Nazrana Nahreen | CSE, IIUC | 2025</p>
+        </footer>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const gridSize = 30;
+        const cellSize = canvas.width / gridSize;
+
+        let grid = Array(gridSize).fill().map(() => Array(gridSize).fill(0));
+        let startPos = null;
+        let endPos = null;
+        let currentMode = 'wall';
+        let isDrawing = false;
+        let visited = [];
+        let path = [];
+        let qTable = {};
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            handleCellClick(e);
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDrawing && (currentMode === 'wall' || currentMode === 'erase')) {
+                handleCellClick(e);
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDrawing = false;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isDrawing = false;
+        });
+
+        function handleCellClick(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor((e.clientX - rect.left) / cellSize);
+            const y = Math.floor((e.clientY - rect.top) / cellSize);
+
+            if (x < 0 || x >= gridSize || y < 0 || y >= gridSize) return;
+
+            if (currentMode === 'wall') {
+                if (!(startPos && startPos[0] === y && startPos[1] === x) &&
+                    !(endPos && endPos[0] === y && endPos[1] === x)) {
+                    grid[y][x] = 1;
+                }
+            } else if (currentMode === 'start') {
+                startPos = [y, x];
+                grid[y][x] = 0;
+            } else if (currentMode === 'end') {
+                endPos = [y, x];
+                grid[y][x] = 0;
+            } else if (currentMode === 'erase') {
+                grid[y][x] = 0;
+                if (startPos && startPos[0] === y && startPos[1] === x) startPos = null;
+                if (endPos && endPos[0] === y && endPos[1] === x) endPos = null;
+            }
+
+            drawGrid();
+        }
+
+        function drawGrid() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    if (startPos && startPos[0] === y && startPos[1] === x) {
+                        ctx.fillStyle = '#00ff00';
+                    } else if (endPos && endPos[0] === y && endPos[1] === x) {
+                        ctx.fillStyle = '#ff0000';
+                    } else if (grid[y][x] === 1) {
+                        ctx.fillStyle = '#000000';
+                    } else if (path.some(p => p[0] === y && p[1] === x)) {
+                        ctx.fillStyle = '#ffff00';
+                    } else if (visited.some(v => v[0] === y && v[1] === x)) {
+                        ctx.fillStyle = '#87ceeb';
+                    } else {
+                        ctx.fillStyle = '#ffffff';
+                    }
+
+                    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                    ctx.strokeStyle = '#cccccc';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                }
+            }
+
+            ctx.lineWidth = 3;
+            if (startPos) {
+                ctx.strokeStyle = '#00aa00';
+                ctx.strokeRect(startPos[1] * cellSize, startPos[0] * cellSize, cellSize, cellSize);
+            }
+            if (endPos) {
+                ctx.strokeStyle = '#aa0000';
+                ctx.strokeRect(endPos[1] * cellSize, endPos[0] * cellSize, cellSize, cellSize);
+            }
+        }
+
+        function getNeighbors(pos) {
+            const [y, x] = pos;
+            const neighbors = [];
+            const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+
+            for (const [dy, dx] of directions) {
+                const ny = y + dy;
+                const nx = x + dx;
+                if (ny >= 0 && ny < gridSize && nx >= 0 && nx < gridSize && grid[ny][nx] !== 1) {
+                    neighbors.push([ny, nx]);
+                }
+            }
+            return neighbors;
+        }
+
+        function heuristic(a, b) {
+            return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
+        }
+
+        function arrayEquals(a, b) {
+            return a[0] === b[0] && a[1] === b[1];
+        }
+
+        async function runAlgorithm(algoType) {
+            if (!startPos || !endPos) {
+                showStats('⚠️ Please set both START and END points first!', 'error');
+                return;
+            }
+
+            visited = [];
+            path = [];
+
+            showStats('🔄 Running ' + algoType.toUpperCase() + '...', '');
+
+            const startTime = performance.now();
+
+            if (algoType === 'astar') {
+                await astar();
+            } else if (algoType === 'dijkstra') {
+                await dijkstra();
+            } else if (algoType === 'bfs') {
+                await bfs();
+            } else if (algoType === 'dfs') {
+                await dfs();
+            } else if (algoType === 'qlearning') {
+                await qLearning();
+            }
+
+            const endTime = performance.now();
+            const timeTaken = (endTime - startTime).toFixed(2);
+
+            if (path.length > 0) {
+                showStats(
+                    `✅ Path Found! | Algorithm: ${algoType.toUpperCase()} | ` +
+                    `Visited: ${visited.length} cells | Path Length: ${path.length} steps | ` +
+                    `Time: ${timeTaken}ms`,
+                    'success'
+                );
+            } else {
+                showStats('❌ No path exists between start and end!', 'error');
+            }
+        }
+
+        async function astar() {
+            const openList = [[0, startPos, null]];
+            const closedSet = new Set();
+            const gScore = {};
+            const parentMap = new Map();
+            gScore[startPos.toString()] = 0;
+
+            while (openList.length > 0) {
+                openList.sort((a, b) => a[0] - b[0]);
+                const [f, current, parent] = openList.shift();
+                const key = current.toString();
+
+                if (closedSet.has(key)) continue;
+
+                closedSet.add(key);
+                visited.push(current);
+                if (parent) parentMap.set(key, parent);
+                drawGrid();
+                await sleep(10);
+
+                if (arrayEquals(current, endPos)) {
+                    reconstructPathFromMap(parentMap, current);
+                    return;
+                }
+
+                for (const neighbor of getNeighbors(current)) {
+                    const neighborKey = neighbor.toString();
+                    if (closedSet.has(neighborKey)) continue;
+
+                    const tentativeG = gScore[key] + 1;
+
+                    if (!(neighborKey in gScore) || tentativeG < gScore[neighborKey]) {
+                        gScore[neighborKey] = tentativeG;
+                        const h = heuristic(neighbor, endPos);
+                        const f = tentativeG + h;
+                        openList.push([f, neighbor, current]);
+                    }
+                }
+            }
+        }
+
+        async function dijkstra() {
+            const openList = [[0, startPos, null]];
+            const closedSet = new Set();
+            const costs = {};
+            const parentMap = new Map();
+            costs[startPos.toString()] = 0;
+
+            while (openList.length > 0) {
+                openList.sort((a, b) => a[0] - b[0]);
+                const [cost, current, parent] = openList.shift();
+                const key = current.toString();
+
+                if (closedSet.has(key)) continue;
+
+                closedSet.add(key);
+                visited.push(current);
+                if (parent) parentMap.set(key, parent);
+                drawGrid();
+                await sleep(10);
+
+                if (arrayEquals(current, endPos)) {
+                    reconstructPathFromMap(parentMap, current);
+                    return;
+                }
+
+                for (const neighbor of getNeighbors(current)) {
+                    const neighborKey = neighbor.toString();
+                    if (closedSet.has(neighborKey)) continue;
+
+                    const newCost = costs[key] + 1;
+
+                    if (!(neighborKey in costs) || newCost < costs[neighborKey]) {
+                        costs[neighborKey] = newCost;
+                        openList.push([newCost, neighbor, current]);
+                    }
+                }
+            }
+        }
+
+        async function bfs() {
+            const queue = [[startPos, null]];
+            const visitedSet = new Set([startPos.toString()]);
+            const parentMap = new Map();
+
+            while (queue.length > 0) {
+                const [current, parent] = queue.shift();
+                visited.push(current);
+                if (parent) parentMap.set(current.toString(), parent);
+                drawGrid();
+                await sleep(10);
+
+                if (arrayEquals(current, endPos)) {
+                    reconstructPathFromMap(parentMap, current);
+                    return;
+                }
+
+                for (const neighbor of getNeighbors(current)) {
+                    const key = neighbor.toString();
+                    if (!visitedSet.has(key)) {
+                        visitedSet.add(key);
+                        queue.push([neighbor, current]);
+                    }
+                }
+            }
+        }
+
+        async function dfs() {
+            const stack = [[startPos, null]];
+            const visitedSet = new Set();
+            const parentMap = new Map();
+
+            while (stack.length > 0) {
+                const [current, parent] = stack.pop();
+                const key = current.toString();
+
+                if (visitedSet.has(key)) continue;
+
+                visitedSet.add(key);
+                visited.push(current);
+                if (parent) parentMap.set(key, parent);
+                drawGrid();
+                await sleep(10);
+
+                if (arrayEquals(current, endPos)) {
+                    reconstructPathFromMap(parentMap, current);
+                    return;
+                }
+
+                const neighbors = getNeighbors(current);
+                for (let i = neighbors.length - 1; i >= 0; i--) {
+                    const neighbor = neighbors[i];
+                    if (!visitedSet.has(neighbor.toString())) {
+                        stack.push([neighbor, current]);
+                    }
+                }
+            }
+        }
+
+        async function qLearning() {
+            const episodes = 500;
+            const learningRate = 0.1;
+            const discountFactor = 0.9;
+            const epsilon = 0.3;
+            const maxSteps = gridSize * gridSize * 2;
+
+            qTable = {};
+
+            showStats('🧠 Q-Learning: Training agent (500 episodes)...', 'training');
+
+            for (let episode = 0; episode < episodes; episode++) {
+                let state = [...startPos];
+                let steps = 0;
+
+                while (steps < maxSteps) {
+                    const stateKey = state.toString();
+
+                    if (!qTable[stateKey]) {
+                        qTable[stateKey] = {};
+                        const neighbors = getNeighbors(state);
+                        neighbors.forEach(n => {
+                            qTable[stateKey][n.toString()] = 0;
+                        });
+                    }
+
+                    let action;
+                    const neighbors = getNeighbors(state);
+
+                    if (neighbors.length === 0) break;
+
+                    if (Math.random() < epsilon) {
+                        action = neighbors[Math.floor(Math.random() * neighbors.length)];
+                    } else {
+                        let maxQ = -Infinity;
+                        action = neighbors[0];
+                        for (const neighbor of neighbors) {
+                            const q = qTable[stateKey][neighbor.toString()] || 0;
+                            if (q > maxQ) {
+                                maxQ = q;
+                                action = neighbor;
+                            }
+                        }
+                    }
+
+                    let reward;
+                    if (arrayEquals(action, endPos)) {
+                        reward = 100;
+                    } else if (grid[action[0]][action[1]] === 1) {
+                        reward = -100;
+                    } else {
+                        const distBefore = heuristic(state, endPos);
+                        const distAfter = heuristic(action, endPos);
+                        reward = -1 + (distBefore - distAfter) * 2;
+                    }
+
+                    const nextStateKey = action.toString();
+                    let maxNextQ = 0;
+                    if (qTable[nextStateKey]) {
+                        const nextQs = Object.values(qTable[nextStateKey]);
+                        if (nextQs.length > 0) {
+                            maxNextQ = Math.max(...nextQs);
+                        }
+                    }
+
+                    const oldQ = qTable[stateKey][action.toString()] || 0;
+                    qTable[stateKey][action.toString()] = oldQ + learningRate * (reward + discountFactor * maxNextQ - oldQ);
+
+                    state = action;
+                    steps++;
+
+                    if (arrayEquals(state, endPos)) {
+                        break;
+                    }
+                }
+
+                if ((episode + 1) % 100 === 0) {
+                    showStats(`🧠 Q-Learning: Training... Episode ${episode + 1}/${episodes}`, 'training');
+                    await sleep(1);
+                }
+            }
+
+            showStats('🧠 Q-Learning: Training complete! Finding optimal path...', 'training');
+            await sleep(500);
+
+            let state = [...startPos];
+            visited.push(state);
+            path.push(state);
+            let steps = 0;
+
+            while (steps < maxSteps) {
+                drawGrid();
+                await sleep(50);
+
+                if (arrayEquals(state, endPos)) {
+                    break;
+                }
+
+                const stateKey = state.toString();
+                if (!qTable[stateKey]) {
+                    path = [];
+                    break;
+                }
+
+                const neighbors = getNeighbors(state);
+                let bestAction = null;
+                let maxQ = -Infinity;
+
+                for (const neighbor of neighbors) {
+                    const q = qTable[stateKey][neighbor.toString()] || 0;
+                    if (q > maxQ) {
+                        maxQ = q;
+                        bestAction = neighbor;
+                    }
+                }
+
+                if (!bestAction) break;
+
+                state = bestAction;
+                visited.push(state);
+                path.push(state);
+                steps++;
+            }
+
+            drawGrid();
+        }
+
+        function reconstructPathFromMap(parentMap, end) {
+            path = [];
+            let current = end;
+
+            while (current) {
+                path.push(current);
+                current = parentMap.get(current.toString());
+            }
+
+            path.reverse();
+            drawGrid();
+        }
+
+        function clearPath() {
+            visited = [];
+            path = [];
+            drawGrid();
+            showStats('Path cleared! Ready for next run.', '');
+        }
+
+        function resetGrid() {
+            grid = Array(gridSize).fill().map(() => Array(gridSize).fill(0));
+            startPos = null;
+            endPos = null;
+            visited = [];
+            path = [];
+            qTable = {};
+            drawGrid();
+            showStats('Grid reset! Start by setting start and end points.', '');
+        }
+
+        function showStats(message, type) {
+            const statsDiv = document.getElementById('stats');
+            statsDiv.textContent = message;
+            statsDiv.className = 'stats ' + type;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        drawGrid();
+        showStats('👆 Click buttons above to start! Set start point, end point, then draw some walls!', '');
+    </script>
+</body>
+</html>
